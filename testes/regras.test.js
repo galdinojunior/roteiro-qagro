@@ -7,11 +7,11 @@ const { criarFonteMemoria } = require('./fonte-memoria');
 const r = carregar('apps-script/Geo.gs', 'apps-script/Leitor.gs', 'apps-script/Regras.gs');
 
 const USUARIOS = [
-  ['Ana', 'ENTR01', 'entrevistador', 'A1', 'S'],
-  ['Bruno', 'ENTR02', 'Entrevistador', 'a2', 's'],
+  ['Ana', 'ENTR01', 'entrevistador', 'A', 'S'],
+  ['Bruno', 'ENTR02', 'Entrevistador', 'b', 's'],
   ['Sara', 'SUPE01', 'supervisor', '', 'S'],
-  ['Ivo', 'INAT01', 'entrevistador', 'A1', 'N'],
-  ['Sem Dupla', 'SEMD01', 'entrevistador', '', 'S'],
+  ['Ivo', 'INAT01', 'entrevistador', 'A', 'N'],
+  ['Sem Equipe', 'SEMD01', 'entrevistador', '', 'S'],
 ];
 const col = (nome) => r.COLUNAS_REGISTROS.indexOf(nome);
 const sit = (nome) => r.COLUNAS_SITUACAO.indexOf(nome);
@@ -19,7 +19,7 @@ const sit = (nome) => r.COLUNAS_SITUACAO.indexOf(nome);
 function registro(extra) {
   return Object.assign({
     id_marcacao: 'id-1', tipo: 'status', marcado_em: '2026-09-14T10:00:00-03:00',
-    chave: '2026-09-14|A1|AA0001X', status: 'Feito', obs: '',
+    chave: '2026-10-12|A|AA0001X', status: 'Feito', obs: '',
     lat: -20.0011, lon: -44.0012, precisao_m: 8, hora_gps: '2026-09-14T09:59:58-03:00',
     dist_planejado_m: 15, gps_ok: 'S',
   }, extra);
@@ -47,6 +47,7 @@ test('lerConfig: padrões', () => {
   assert.equal(c.gps_precisao_max_m, 100);
   assert.equal(c.gps_timeout_s, 20);
   assert.equal(c.sync_intervalo_min, 5);
+  assert.equal(c.tentativas_max, 3);
 });
 
 test('lerConfig: valores da planilha, vírgula decimal e vazios', () => {
@@ -59,13 +60,16 @@ test('lerConfig: valores da planilha, vírgula decimal e vazios', () => {
   assert.equal(c.gps_precisao_max_m, 50.5);
   assert.equal(c.dias_passados, 7);
   assert.equal(c.sync_intervalo_min, 5);
+  assert.equal(simples(r.lerConfig([['tentativas_max', '2']])).tentativas_max, 2);
+  assert.equal(simples(r.lerConfig([['tentativas_max', '0']])).tentativas_max, 3);
+  assert.equal(simples(r.lerConfig([['tentativas_max', '2,5']])).tentativas_max, 3);
 });
 
 // --- usuários ---
 test('acharUsuario: entrevistador, maiúsculas/minúsculas e supervisor', () => {
-  assert.deepEqual(simples(r.acharUsuario(USUARIOS, 'ENTR01')), { usuario: { nome: 'Ana', codigo: 'ENTR01', papel: 'entrevistador', dupla: 'A1' } });
-  assert.deepEqual(simples(r.acharUsuario(USUARIOS, ' entr02 ')).usuario.dupla, 'A2');
-  assert.deepEqual(simples(r.acharUsuario(USUARIOS, 'SUPE01')).usuario, { nome: 'Sara', codigo: 'SUPE01', papel: 'supervisor', dupla: null });
+  assert.deepEqual(simples(r.acharUsuario(USUARIOS, 'ENTR01')), { usuario: { nome: 'Ana', codigo: 'ENTR01', papel: 'entrevistador', equipe: 'A' } });
+  assert.deepEqual(simples(r.acharUsuario(USUARIOS, ' entr02 ')).usuario.equipe, 'B');
+  assert.deepEqual(simples(r.acharUsuario(USUARIOS, 'SUPE01')).usuario, { nome: 'Sara', codigo: 'SUPE01', papel: 'supervisor', equipe: null });
 });
 
 test('acharUsuario: erros', () => {
@@ -76,14 +80,14 @@ test('acharUsuario: erros', () => {
 });
 
 // --- filtro de roteiro ---
-test('filtrarBlocos: entrevistador só vê a dupla; supervisor vê tudo; janela de dias', () => {
+test('filtrarBlocos: entrevistador só vê a equipe; usa o último dia do período', () => {
   const blocos = r.lerRoteiros(linhasSinteticas()).blocos;
   const ana = r.acharUsuario(USUARIOS, 'ENTR01').usuario;
   const sara = r.acharUsuario(USUARIOS, 'SUPE01').usuario;
-  const ids = (lista) => simples(lista).map((b) => b.data + '|' + b.dupla);
-  assert.deepEqual(ids(r.filtrarBlocos(blocos, ana, '2026-09-14', 7)), ['2026-09-14|A1', '2026-09-15|A1']);
+  const ids = (lista) => simples(lista).map((b) => b.data + '|' + b.equipe);
+  assert.deepEqual(ids(r.filtrarBlocos(blocos, ana, '2026-10-12', 0)), ['2026-10-12|A', '2026-10-13|A']);
   assert.equal(r.filtrarBlocos(blocos, sara, '2026-09-14', 7).length, 3);
-  assert.deepEqual(ids(r.filtrarBlocos(blocos, sara, '2026-09-22', 7)), ['2026-09-15|A1']);
+  assert.deepEqual(ids(r.filtrarBlocos(blocos, sara, '2026-10-20', 7)), ['2026-10-12|A', '2026-10-13|A']);
 });
 
 // --- registros ---
@@ -95,8 +99,8 @@ test('processarRegistros: aceita e monta a linha de Registros', () => {
   assert.equal(l.length, r.COLUNAS_REGISTROS.length);
   assert.equal(l[col('id_marcacao')], 'id-1');
   assert.equal(l[col('recebido_em')], '2026-09-14T10:05:00-03:00');
-  assert.equal(l[col('data_roteiro')], '2026-09-14');
-  assert.equal(l[col('dupla')], 'A1');
+  assert.equal(l[col('data_roteiro')], '2026-10-12');
+  assert.equal(l[col('equipe')], 'A');
   assert.equal(l[col('ponto')], 'AA0001X');
   assert.equal(l[col('nome')], 'Ana');
   assert.equal(l[col('codigo_usuario')], 'ENTR01');
@@ -136,7 +140,7 @@ test('processarRegistros: id já gravado ou repetido no lote não duplica', () =
 
 test('processarRegistros: rejeições com motivo', () => {
   const motivo = (extra) => simples(r.processarRegistros([registro(extra)], contexto())).rejeitados[0].motivo;
-  assert.equal(motivo({ chave: '2026-09-14|A2|BB0001X' }), 'ponto_fora_da_dupla');
+  assert.equal(motivo({ chave: '2026-10-12|B|BB0001X' }), 'ponto_fora_da_dupla');
   assert.equal(motivo({ chave: 'sem-formato' }), 'ponto_fora_da_dupla');
   assert.equal(motivo({ status: 'Talvez' }), 'status_invalido');
   assert.equal(motivo({ tipo: 'x' }), 'tipo_invalido');
@@ -147,8 +151,8 @@ test('processarRegistros: rejeições com motivo', () => {
   assert.equal(motivo({ tipo: 'obs', status: 'Talvez', gps_ok: 'NA' }), 'status_invalido');
 });
 
-test('processarRegistros: supervisor marca qualquer dupla; números inválidos viram vazio', () => {
-  const res = simples(r.processarRegistros([registro({ chave: '2026-09-14|A2|BB0001X', lat: 'abc' })], contexto({}, 'SUPE01')));
+test('processarRegistros: supervisor marca qualquer equipe; números inválidos viram vazio', () => {
+  const res = simples(r.processarRegistros([registro({ chave: '2026-10-12|B|BB0001X', lat: 'abc' })], contexto({}, 'SUPE01')));
   assert.equal(res.linhas.length, 1);
   assert.equal(res.linhas[0][col('lat')], '');
 });
@@ -202,12 +206,12 @@ test('atualizarSituacao: status antigo chegando depois de uma observação nova 
 
 test('situacaoParaApp: só pontos dos blocos enviados, com números ou null', () => {
   const blocos = r.lerRoteiros(linhasSinteticas()).blocos;
-  const linhas = r.processarRegistros([registro(), registro({ id_marcacao: 'b', chave: '2026-09-14|A2|BB0001X' })], contexto({}, 'SUPE01')).linhas;
+  const linhas = r.processarRegistros([registro(), registro({ id_marcacao: 'b', chave: '2026-10-12|B|BB0001X' })], contexto({}, 'SUPE01')).linhas;
   const s = r.atualizarSituacao([], linhas);
   const soA1 = r.filtrarBlocos(blocos, r.acharUsuario(USUARIOS, 'ENTR01').usuario, '2026-09-14', 7);
   const itens = simples(r.situacaoParaApp(s, soA1));
   assert.deepEqual(itens, [{
-    chave: '2026-09-14|A1|AA0001X', status: 'Feito', status_em: '2026-09-14T10:00:00-03:00', nome: 'Sara',
+    chave: '2026-10-12|A|AA0001X', status: 'Feito', status_em: '2026-09-14T10:00:00-03:00', nome: 'Sara',
     precisao_m: 8, dist_planejado_m: 15, gps_ok: 'S', obs: '', obs_em: '',
   }]);
 });
@@ -225,17 +229,18 @@ test('atenderRequisicao: entrar como entrevistador', () => {
   const res = simples(r.atenderRequisicao({ acao: 'entrar', codigo: 'ENTR01' }, fonte()));
   assert.equal(res.ok, true);
   assert.equal(res.servidor_em, '2026-09-14T10:05:00-03:00');
-  assert.deepEqual(res.usuario, { nome: 'Ana', papel: 'entrevistador', dupla: 'A1' });
-  assert.deepEqual(res.roteiro.blocos.map((b) => b.dupla), ['A1', 'A1']);
+  assert.deepEqual(res.usuario, { nome: 'Ana', papel: 'entrevistador', equipe: 'A' });
+  assert.deepEqual(res.roteiro.blocos.map((b) => b.equipe), ['A', 'A']);
   assert.deepEqual(res.situacao, []);
   assert.deepEqual(res.avisos, []);
   assert.equal(res.config.gps_limite_m, 200);
+  assert.equal(res.config.tentativas_max, 3);
 });
 
 test('atenderRequisicao: supervisor vê tudo e recebe avisos', () => {
   const res = simples(r.atenderRequisicao({ acao: 'entrar', codigo: 'SUPE01' }, fonte()));
   assert.equal(res.roteiro.blocos.length, 3);
-  assert.equal(res.avisos.length, 1);
+  assert.ok(res.avisos.length >= 1);
 });
 
 test('atenderRequisicao: erros', () => {

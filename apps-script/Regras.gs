@@ -11,14 +11,15 @@ var CONFIG_PADRAO = {
   gps_limite_m: '200',
   gps_precisao_max_m: '100',
   gps_timeout_s: '20',
-  sync_intervalo_min: '5'
+  sync_intervalo_min: '5',
+  tentativas_max: '3'
 };
 
 var COLUNAS_REGISTROS = ['id_marcacao', 'recebido_em', 'marcado_em', 'tipo', 'codigo_usuario', 'nome', 'papel',
-  'data_roteiro', 'dupla', 'ponto', 'chave', 'status', 'obs', 'lat', 'lon', 'precisao_m', 'hora_gps',
+  'data_roteiro', 'equipe', 'ponto', 'chave', 'status', 'obs', 'lat', 'lon', 'precisao_m', 'hora_gps',
   'dist_planejado_m', 'gps_ok', 'aparelho_id', 'versao_app'];
 
-var COLUNAS_SITUACAO = ['chave', 'data_roteiro', 'dupla', 'ponto', 'status', 'status_em', 'nome', 'lat', 'lon',
+var COLUNAS_SITUACAO = ['chave', 'data_roteiro', 'equipe', 'ponto', 'status', 'status_em', 'nome', 'lat', 'lon',
   'precisao_m', 'dist_planejado_m', 'gps_ok', 'obs', 'obs_em', 'n_marcacoes'];
 
 // Índices de status e observação nas linhas de Registros.
@@ -55,6 +56,8 @@ function lerConfig(linhas) {
     var n = Number(String(bruto[k]).replace(',', '.'));
     return isFinite(n) && String(bruto[k]).trim() !== '' ? n : Number(CONFIG_PADRAO[k]);
   };
+  var tentativas = numero('tentativas_max');
+  if (!isFinite(tentativas) || tentativas < 1 || Math.floor(tentativas) !== tentativas) tentativas = 3;
   return {
     status: lista('status'),
     status_sem_obs: lista('status_sem_obs'),
@@ -62,11 +65,12 @@ function lerConfig(linhas) {
     gps_limite_m: numero('gps_limite_m'),
     gps_precisao_max_m: numero('gps_precisao_max_m'),
     gps_timeout_s: numero('gps_timeout_s'),
-    sync_intervalo_min: numero('sync_intervalo_min')
+    sync_intervalo_min: numero('sync_intervalo_min'),
+    tentativas_max: tentativas
   };
 }
 
-/** Linhas da aba Usuarios (sem cabeçalho): [nome, codigo, papel, dupla, ativo]. */
+/** Linhas da aba Usuarios (sem cabeçalho): [nome, codigo, papel, equipe, ativo]. */
 function acharUsuario(linhas, codigo) {
   var alvo = String(codigo === null || codigo === undefined ? '' : codigo).trim().toUpperCase();
   if (!alvo) return { erro: 'codigo_invalido' };
@@ -76,9 +80,9 @@ function acharUsuario(linhas, codigo) {
     var papel = normalizarTexto(l[2]);
     if (PAPEIS.indexOf(papel) < 0) return { erro: 'codigo_invalido' };
     if (String(l[4] || '').trim().toUpperCase() !== 'S') return { erro: 'usuario_inativo' };
-    var dupla = String(l[3] || '').trim().toUpperCase();
-    if (papel === 'entrevistador' && !/^[A-Z]\d$/.test(dupla)) return { erro: 'codigo_invalido' };
-    return { usuario: { nome: String(l[0] || '').trim(), codigo: alvo, papel: papel, dupla: papel === 'entrevistador' ? dupla : null } };
+    var equipeBruta = String(l[3] || '').trim().toUpperCase();
+    if (papel === 'entrevistador' && !/^[A-Z]\d?$/.test(equipeBruta)) return { erro: 'codigo_invalido' };
+    return { usuario: { nome: String(l[0] || '').trim(), codigo: alvo, papel: papel, equipe: papel === 'entrevistador' ? equipeBruta.charAt(0) : null } };
   }
   return { erro: 'codigo_invalido' };
 }
@@ -91,20 +95,22 @@ function _somarDias(iso, n) {
 function filtrarBlocos(blocos, usuario, hojeIso, diasPassados) {
   var inicio = _somarDias(hojeIso, -diasPassados);
   return blocos.filter(function (b) {
-    return b.data >= inicio && (usuario.papel !== 'entrevistador' || b.dupla === usuario.dupla);
+    var ultimoDia = b.dias && b.dias.length ? b.dias[b.dias.length - 1] : b.data;
+    return ultimoDia >= inicio && (usuario.papel !== 'entrevistador' || b.equipe === usuario.equipe);
   });
 }
 
 function _podeMarcar(usuario, chave) {
   var partes = String(chave || '').split('|');
   if (partes.length !== 3 || !partes[2]) return false;
-  return usuario.papel !== 'entrevistador' || partes[1] === usuario.dupla;
+  return usuario.papel !== 'entrevistador' || partes[1] === usuario.equipe;
 }
 
 function _validarRegistro(r, usuario, config) {
   if (!r || typeof r.id_marcacao !== 'string' || !/^[A-Za-z0-9-]{1,64}$/.test(r.id_marcacao)) return 'sem_id';
   if (r.tipo !== 'status' && r.tipo !== 'obs') return 'tipo_invalido';
   if (isNaN(Date.parse(r.marcado_em))) return 'data_invalida';
+  // Mantém o motivo legado para celulares que ainda o têm na fila offline.
   if (!_podeMarcar(usuario, r.chave)) return 'ponto_fora_da_dupla';
   if (r.tipo === 'status' && config.status.indexOf(r.status) < 0) return 'status_invalido';
   if (r.tipo === 'obs' && r.status !== '' && config.status.indexOf(r.status) < 0) return 'status_invalido';
@@ -216,7 +222,7 @@ function atenderRequisicao(req, fonte) {
   var agora = fonte.agoraIso();
   var resposta = {
     ok: true, servidor_em: agora,
-    usuario: { nome: usuario.nome, papel: usuario.papel, dupla: usuario.dupla },
+    usuario: { nome: usuario.nome, papel: usuario.papel, equipe: usuario.equipe },
     config: config, aceitos: [], rejeitados: [], avisos: []
   };
 
@@ -235,7 +241,7 @@ function atenderRequisicao(req, fonte) {
     });
   }
 
-  var leitura = lerRoteiros(fonte.lerRoteiros());
+  var leitura = lerRoteiros(fonte.lerRoteiros(), { tentativasMax: config.tentativas_max });
   var blocos = filtrarBlocos(leitura.blocos, usuario, fonte.hojeIso(), config.dias_passados);
   resposta.roteiro = { gerado_em: agora, blocos: blocos };
   resposta.situacao = situacaoParaApp(fonte.lerSituacao(), blocos);

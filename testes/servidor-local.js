@@ -1,6 +1,6 @@
 // Servidor de desenvolvimento: serve app/ e simula o Apps Script em /api com dados fictícios em memória.
 // Uso: npm run servidor  →  http://localhost:8080
-// Códigos: ENTR01 (dupla A1), ENTR02 (A2), SUPE01 (supervisor), INAT01 (inativo).
+// Códigos: ENTR01 (equipe A), ENTR02 (equipe B), SUPE01 (supervisor), INAT01 (inativo).
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -29,10 +29,10 @@ function criarServidor() {
   const fonte = criarFonteMemoria({
     roteiros: linhasSinteticas(new Date(agora.getFullYear(), agora.getMonth(), agora.getDate())),
     usuarios: [
-      ['Entrevistador A1', 'ENTR01', 'entrevistador', 'A1', 'S'],
-      ['Entrevistador A2', 'ENTR02', 'entrevistador', 'A2', 'S'],
+      ['Entrevistador A', 'ENTR01', 'entrevistador', 'A', 'S'],
+      ['Entrevistador B', 'ENTR02', 'entrevistador', 'B', 'S'],
       ['Supervisão', 'SUPE01', 'supervisor', '', 'S'],
-      ['Inativo', 'INAT01', 'entrevistador', 'A1', 'N'],
+      ['Inativo', 'INAT01', 'entrevistador', 'A', 'N'],
     ],
     hoje: hojeLocal,
     agora: () => new Date().toISOString(),
@@ -80,7 +80,7 @@ function criarServidor() {
 if (require.main === module) {
   const porta = Number(process.env.PORTA || 8080);
   criarServidor().listen(porta, () => {
-    console.log(`http://localhost:${porta}  — códigos: ENTR01 (A1), ENTR02 (A2), SUPE01 (supervisor), INAT01 (inativo)`);
+    console.log(`http://localhost:${porta}  — códigos: ENTR01 (A), ENTR02 (B), SUPE01 (supervisor), INAT01 (inativo)`);
   });
 }
 

@@ -16,11 +16,11 @@ const api = (corpo) => fetch(`${base}/api`, {
   method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corpo),
 }).then((r) => r.json());
 
-test('API: entrar devolve só a dupla do entrevistador, começando hoje', async () => {
+test('API: entrar devolve só a equipe do entrevistador, começando hoje', async () => {
   const r = await api({ acao: 'entrar', codigo: 'ENTR01' });
   assert.equal(r.ok, true);
   assert.ok(r.roteiro.blocos.length >= 1);
-  assert.ok(r.roteiro.blocos.every((b) => b.dupla === 'A1'));
+  assert.ok(r.roteiro.blocos.every((b) => b.equipe === 'A'));
   const hoje = new Date();
   const iso = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
   assert.equal(r.roteiro.blocos[0].data, iso);

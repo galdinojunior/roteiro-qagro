@@ -75,7 +75,7 @@ function onOpen() {
 function configurarPlanilha() {
   var p = SpreadsheetApp.getActive();
   _garantirAba(p, ABA.ROTEIROS, null);
-  var usuarios = _garantirAba(p, ABA.USUARIOS, ['nome', 'codigo', 'papel', 'dupla', 'ativo']);
+  var usuarios = _garantirAba(p, ABA.USUARIOS, ['nome', 'codigo', 'papel', 'equipe', 'ativo']);
   usuarios.getRange('B:B').setNumberFormat('@');
   var config = _garantirAba(p, ABA.CONFIG, ['chave', 'valor']);
   if (config.getLastRow() < 2) {
@@ -113,20 +113,13 @@ function gerarCodigoLinhaSelecionada() {
 /** Resumo por dia do que o app vai enxergar na aba roteiros, mais os avisos de leitura. */
 function verificarRoteiros() {
   var p = SpreadsheetApp.getActive();
-  var leitura = lerRoteiros(_aba(p, ABA.ROTEIROS).getDataRange().getValues());
-  var porDia = {};
-  leitura.blocos.forEach(function (b) {
-    var d = porDia[b.data] || (porDia[b.data] = { duplas: [], pontos: 0, semTermino: 0 });
-    d.duplas.push(b.dupla);
-    d.pontos += b.pontos.length;
-    if (!b.termino) d.semTermino++;
-  });
-  var linhas = Object.keys(porDia).sort().map(function (data) {
-    var d = porDia[data];
-    return data + ': ' + d.duplas.join(', ') + ' — ' + d.pontos + ' pontos' + (d.semTermino ? ' — ' + d.semTermino + ' sem término' : '');
+  var config = lerConfig(_linhasSemCabecalho(p, ABA.CONFIG));
+  var leitura = lerRoteiros(_aba(p, ABA.ROTEIROS).getDataRange().getValues(), { tentativasMax: config.tentativas_max });
+  var linhas = leitura.blocos.map(function (b) {
+    return b.equipe + ' · ' + (b.periodo || b.data) + ' · ' + b.pontos.length + ' pontos · ' + b.esgotados + ' esgotados · término ' + (b.termino ? 'sim' : 'NÃO');
   });
   var avisos = leitura.avisos.slice(0, 20);
-  _avisar((linhas.length ? linhas.join('\n') : 'Nenhum bloco de dupla encontrado.') +
+  _avisar((linhas.length ? linhas.join('\n') : 'Nenhum bloco de equipe encontrado.') + '\n\nTotal de esgotados: ' + leitura.esgotados +
     (avisos.length ? '\n\nAvisos (' + leitura.avisos.length + '):\n' + avisos.join('\n') : '\n\nSem avisos.'));
 }
 

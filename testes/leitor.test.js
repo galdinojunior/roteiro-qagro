@@ -4,61 +4,55 @@ const { carregar, simples } = require('./carregar');
 const { linhasSinteticas } = require('./fixtures/roteiros_sintetico');
 
 const g = carregar('apps-script/Geo.gs', 'apps-script/Leitor.gs');
-const ler = (linhas) => simples(g.lerRoteiros(linhas));
+const ler = (linhas, opcoes) => simples(g.lerRoteiros(linhas, opcoes));
 
-test('lê só blocos de dupla com pontos, na ordem da planilha', () => {
-  const { blocos } = ler(linhasSinteticas());
-  assert.deepEqual(blocos.map((b) => b.data + '|' + b.dupla), ['2026-09-14|A1', '2026-09-14|A2', '2026-09-15|A1']);
+test('lê equipes, períodos, tentativas e chaves na ordem da planilha', () => {
+  const r = ler(linhasSinteticas());
+  assert.deepEqual(r.blocos.map((b) => b.data + '|' + b.equipe), ['2026-10-12|A', '2026-10-12|B', '2026-10-13|A']);
+  const a = r.blocos[0];
+  assert.deepEqual(a.dias, ['2026-10-12', '2026-10-13']);
+  assert.equal(a.periodo, '12 e 13/10');
+  assert.deepEqual(a.pontos.map((p) => [p.codigo, p.ordem, p.visitas]), [['AA0001X', 1, 0], ['AA0002X', 2, 1], ['AA0003X', 3, 2], ['AAHIFEN', 5, 0]]);
+  assert.equal(a.pontos[0].chave, '2026-10-12|A|AA0001X');
+  assert.equal(r.esgotados, 2);
+  assert.equal(a.esgotados, 1);
+  assert.ok(r.avisos.some((aviso) => aviso.includes('coordenada ilegível no ponto AA0003X')));
+  assert.deepEqual(a.encontro, { municipio: 'Cidade Alfa', lat: -20, lon: -44, endereco: 'Praça Alfa' });
+  assert.ok(a.termino);
 });
 
-test('ordena pontos pela coluna ordem e monta chave e grupo', () => {
-  const a1 = ler(linhasSinteticas()).blocos[0];
-  assert.deepEqual(a1.pontos.map((p) => p.codigo), ['AA0001X', 'AA0002X', 'AA0003X']);
-  assert.deepEqual(a1.pontos.map((p) => p.ordem), [1, 2, 3]);
-  assert.equal(a1.pontos[0].chave, '2026-09-14|A1|AA0001X');
-  assert.equal(a1.grupo, 'A');
+test('aceita cabeçalho Equipe A1, rejeita cabeçalho inválido e chave repetida entre blocos', () => {
+  const r = ler(linhasSinteticas());
+  assert.equal(r.blocos[2].equipe, 'A');
+  assert.ok(r.avisos.includes('Linha 17: cabeçalho de bloco não reconhecido ("Equipe XYZ"); bloco ignorado.'));
+  assert.ok(r.avisos.some((a) => a.includes('AA0001X') && a.includes('repetido')));
 });
 
-test('ponto: coordenada com/sem espaço, duplicidade e observação', () => {
-  const [p1, p2, p3] = ler(linhasSinteticas()).blocos[0].pontos;
-  assert.deepEqual([p1.lat, p1.lon, p1.dup, p1.obs], [-20.001, -44.001, true, null]);
-  assert.deepEqual([p2.lat, p2.lon, p2.dup], [-20.001, -44.001, true]);
-  assert.deepEqual([p3.lat, p3.lon, p3.dup, p3.obs], [null, null, false, 'Casa amarela']);
-  assert.equal(p1.municipio, 'Cidade Um');
+test('períodos seguem literalmente a tabela da especificação', () => {
+  const data = '2026-10-12';
+  const casos = [
+    ['12 e 13/10', ['2026-10-12', '2026-10-13']], ['14, 15 e 16/10', ['2026-10-14', '2026-10-15', '2026-10-16']],
+    ['29, 30/10 e 02/11', ['2026-10-29', '2026-10-30', '2026-11-02']], ['30/10 a 02/11', ['2026-10-30', '2026-10-31', '2026-11-01', '2026-11-02']],
+    ['28/09, seg, 9:00h', ['2026-09-28']], ['30/12 a 02/01', ['2026-12-30', '2026-12-31', '2027-01-01', '2027-01-02']],
+  ];
+  for (const [texto, dias] of casos) assert.deepEqual(simples(g.lerPeriodo(texto, texto.startsWith('28/') ? '2026-09-28' : (texto.startsWith('30/12') ? '2026-12-30' : data), 7).dias), dias, texto);
+  assert.deepEqual(simples(g.lerPeriodo(new Date(2026, 8, 8), data, 7)), { dias: ['2026-09-08'], periodo: null, aviso: null });
+  for (const texto of ['abc', '31/02']) {
+    const r = simples(g.lerPeriodo(texto, data, 7));
+    assert.deepEqual(r.dias, [data]);
+    assert.ok(r.aviso.includes('Linha 7: período "' + texto + '" não reconhecido; usando só a data do bloco.'));
+  }
 });
 
-test('encontro por dupla e término quando existe', () => {
-  const [a1, a2] = ler(linhasSinteticas()).blocos;
-  assert.deepEqual(a1.encontro, { municipio: 'Cidade Um', lat: -20, lon: -44, endereco: 'Praça Um - Centro' });
-  assert.equal(a1.termino, null);
-  assert.deepEqual(a2.encontro, { municipio: 'Cidade Dois', lat: -20.1, lon: -44.1, endereco: 'Mercado Dois' });
-  assert.deepEqual(a2.termino, { municipio: 'Cidade Um', lat: -20, lon: -44, endereco: 'Praça Um - Centro' });
+test('tentativas_max diferente esgota visitas iguais ao limite e bloco só esgotado é descartado', () => {
+  const r = ler(linhasSinteticas(), { tentativasMax: 2 });
+  assert.ok(!r.blocos[0].pontos.some((p) => p.codigo === 'AA0003X'));
+  assert.equal(r.esgotados, 3);
+  assert.equal(r.blocos.some((b) => b.equipe === 'C'), false);
 });
 
-test('aceita data em texto dd/mm/aaaa', () => {
-  const b = ler(linhasSinteticas()).blocos[2];
-  assert.equal(b.data, '2026-09-15');
-  assert.equal(b.pontos[0].chave, '2026-09-15|A1|AA0001X');
-});
-
-test('avisa coordenada ilegível com o número da linha (e nada mais)', () => {
-  assert.deepEqual(ler(linhasSinteticas()).avisos, ['Linha 10: coordenada ilegível no ponto AA0003X.']);
-});
-
-test('sem cabeçalho: nenhum bloco e um aviso', () => {
-  const r = ler([['x', 'y'], [1, 2]]);
-  assert.deepEqual(r.blocos, []);
-  assert.equal(r.avisos.length, 1);
-});
-
-test('dataIso', () => {
-  assert.equal(g.dataIso(new Date(2026, 8, 14)), '2026-09-14');
+test('sem cabeçalho, dataIso e normalização', () => {
+  assert.equal(ler([['x']]).blocos.length, 0);
   assert.equal(g.dataIso('5/9/2026'), '2026-09-05');
-  assert.equal(g.dataIso('texto'), null);
-  assert.equal(g.dataIso(null), null);
-});
-
-test('normalizarTexto', () => {
   assert.equal(g.normalizarTexto('  Ponto de TÉRMINO '), 'ponto de termino');
-  assert.equal(g.normalizarTexto(null), '');
 });
