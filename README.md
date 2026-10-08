@@ -6,6 +6,12 @@ Aplicativo web instalável (PWA) para as duplas de campo da pesquisa QAgro consu
 - **Entrevistador:** instala o app pelo link do WhatsApp, entra com seu código, vê só a própria dupla.
 - **Supervisor:** vê e acompanha todas as duplas.
 
+## No ar
+
+- **Endereço do app:** <https://galdinojunior.github.io/roteiro-qagro/> (publicado em 08/10/2026, versão 1.0.0)
+- **Servidor:** Google Apps Script vinculado à planilha de roteiros; o endereço fica em `app/config.js`.
+- **Publicação:** a cada `git push` na `main`, o GitHub Actions roda os testes e publica a pasta `app/`.
+
 ## Documentação
 
 | Documento | Para quem |
