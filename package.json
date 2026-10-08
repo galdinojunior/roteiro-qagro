@@ -1,0 +1,10 @@
+{
+  "name": "roteiro-qagro",
+  "private": true,
+  "version": "1.0.0",
+  "description": "App de roteiros de campo QAgro (COPPETEC)",
+  "scripts": {
+    "test": "node --test \"testes/*.test.js\"",
+    "servidor": "node testes/servidor-local.js"
+  }
+}
