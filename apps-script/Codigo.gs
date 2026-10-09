@@ -114,12 +114,17 @@ function gerarCodigoLinhaSelecionada() {
 function verificarRoteiros() {
   var p = SpreadsheetApp.getActive();
   var config = lerConfig(_linhasSemCabecalho(p, ABA.CONFIG));
-  var leitura = lerRoteiros(_aba(p, ABA.ROTEIROS).getDataRange().getValues(), { tentativasMax: config.tentativas_max });
+  var valores = _aba(p, ABA.ROTEIROS).getDataRange().getValues();
+  var leitura = lerRoteiros(valores, { tentativasMax: config.tentativas_max });
   var linhas = leitura.blocos.map(function (b) {
-    return b.equipe + ' · ' + (b.periodo || b.data) + ' · ' + b.pontos.length + ' pontos · ' + b.esgotados + ' esgotados · término ' + (b.termino ? 'sim' : 'NÃO');
+    var periodo = b.periodo || b.data;
+    var termino = b.termino ? 'sim' : 'NÃO';
+    return b.equipe + ' · ' + periodo + ' · ' + b.pontos.length + ' pontos · ' + b.esgotados +
+      ' esgotados · término ' + termino;
   });
   var avisos = leitura.avisos.slice(0, 20);
-  _avisar((linhas.length ? linhas.join('\n') : 'Nenhum bloco de equipe encontrado.') + '\n\nTotal de esgotados: ' + leitura.esgotados +
+  var resumo = linhas.length ? linhas.join('\n') : 'Nenhum bloco de equipe encontrado.';
+  _avisar(resumo + '\n\nTotal de esgotados: ' + leitura.esgotados +
     (avisos.length ? '\n\nAvisos (' + leitura.avisos.length + '):\n' + avisos.join('\n') : '\n\nSem avisos.'));
 }
 
@@ -131,7 +136,9 @@ function reconstruirSituacao() {
   try {
     var registros = _linhasSemCabecalho(p, ABA.REGISTROS);
     registros.sort(function (a, b) { return String(a[1]).localeCompare(String(b[1])); });
-    _reescrever(_aba(p, ABA.SITUACAO), protegerParaPlanilha(atualizarSituacao([], registros), COLUNAS_TEXTO_LIVRE_SITUACAO), COLUNAS_SITUACAO.length);
+    var situacao = atualizarSituacao([], registros);
+    var protegida = protegerParaPlanilha(situacao, COLUNAS_TEXTO_LIVRE_SITUACAO);
+    _reescrever(_aba(p, ABA.SITUACAO), protegida, COLUNAS_SITUACAO.length);
   } finally {
     trava.releaseLock();
   }

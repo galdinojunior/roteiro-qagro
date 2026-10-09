@@ -72,6 +72,19 @@ test('acharUsuario: entrevistador, maiúsculas/minúsculas e supervisor', () => 
   assert.deepEqual(simples(r.acharUsuario(USUARIOS, 'SUPE01')).usuario, { nome: 'Sara', codigo: 'SUPE01', papel: 'supervisor', equipe: null });
 });
 
+test('acharUsuario: aceita A1 e espaços, mas rejeita equipes inválidas de entrevistador', () => {
+  const usuarios = USUARIOS.concat([
+    ['Legado', 'A1COD', 'entrevistador', 'A1', 'S'],
+    ['Com espaços', 'ESP01', 'entrevistador', ' a1 ', 'S'],
+    ['Duas letras', 'ABC01', 'entrevistador', 'AB', 'S'],
+    ['Só número', 'NUM01', 'entrevistador', '1', 'S'],
+  ]);
+  assert.equal(simples(r.acharUsuario(usuarios, 'A1COD')).usuario.equipe, 'A');
+  assert.equal(simples(r.acharUsuario(usuarios, 'ESP01')).usuario.equipe, 'A');
+  assert.deepEqual(simples(r.acharUsuario(usuarios, 'ABC01')), { erro: 'codigo_invalido' });
+  assert.deepEqual(simples(r.acharUsuario(usuarios, 'NUM01')), { erro: 'codigo_invalido' });
+});
+
 test('acharUsuario: erros', () => {
   assert.deepEqual(simples(r.acharUsuario(USUARIOS, 'INAT01')), { erro: 'usuario_inativo' });
   assert.deepEqual(simples(r.acharUsuario(USUARIOS, 'XXXX')), { erro: 'codigo_invalido' });
@@ -240,7 +253,11 @@ test('atenderRequisicao: entrar como entrevistador', () => {
 test('atenderRequisicao: supervisor vê tudo e recebe avisos', () => {
   const res = simples(r.atenderRequisicao({ acao: 'entrar', codigo: 'SUPE01' }, fonte()));
   assert.equal(res.roteiro.blocos.length, 3);
-  assert.ok(res.avisos.length >= 1);
+  assert.deepEqual(res.avisos, [
+    'Linha 7: coordenada ilegível no ponto AA0003X.',
+    'Linha 17: cabeçalho de bloco não reconhecido ("Equipe XYZ"); bloco ignorado.',
+    'Linha 20: ponto AA0001X repetido na equipe A; ignorado.',
+  ]);
 });
 
 test('atenderRequisicao: erros', () => {

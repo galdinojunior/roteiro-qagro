@@ -82,7 +82,14 @@ function acharUsuario(linhas, codigo) {
     if (String(l[4] || '').trim().toUpperCase() !== 'S') return { erro: 'usuario_inativo' };
     var equipeBruta = String(l[3] || '').trim().toUpperCase();
     if (papel === 'entrevistador' && !/^[A-Z]\d?$/.test(equipeBruta)) return { erro: 'codigo_invalido' };
-    return { usuario: { nome: String(l[0] || '').trim(), codigo: alvo, papel: papel, equipe: papel === 'entrevistador' ? equipeBruta.charAt(0) : null } };
+    return {
+      usuario: {
+        nome: String(l[0] || '').trim(),
+        codigo: alvo,
+        papel: papel,
+        equipe: papel === 'entrevistador' ? equipeBruta.charAt(0) : null
+      }
+    };
   }
   return { erro: 'codigo_invalido' };
 }
@@ -114,7 +121,8 @@ function _validarRegistro(r, usuario, config) {
   if (!_podeMarcar(usuario, r.chave)) return 'ponto_fora_da_dupla';
   if (r.tipo === 'status' && config.status.indexOf(r.status) < 0) return 'status_invalido';
   if (r.tipo === 'obs' && r.status !== '' && config.status.indexOf(r.status) < 0) return 'status_invalido';
-  if (r.hora_gps !== '' && r.hora_gps !== null && r.hora_gps !== undefined && isNaN(Date.parse(r.hora_gps))) return 'data_invalida';
+  var horaGpsInvalida = r.hora_gps !== '' && r.hora_gps !== null && r.hora_gps !== undefined;
+  if (horaGpsInvalida && isNaN(Date.parse(r.hora_gps))) return 'data_invalida';
   if (GPS_VALIDOS.indexOf(r.gps_ok) < 0) return 'gps_invalido';
   return null;
 }

@@ -4,8 +4,13 @@ function dia(inicio, deslocamento) {
   return new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + deslocamento);
 }
 
-function ddmmaaaa(d) {
-  return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+function periodoDeDoisDias(d0, d1) {
+  const d0Dia = String(d0.getDate()).padStart(2, '0');
+  const d1Dia = String(d1.getDate()).padStart(2, '0');
+  const d0Mes = String(d0.getMonth() + 1).padStart(2, '0');
+  const d1Mes = String(d1.getMonth() + 1).padStart(2, '0');
+  if (d0.getMonth() === d1.getMonth()) return d0Dia + ' e ' + d1Dia + '/' + d1Mes;
+  return d0Dia + '/' + d0Mes + ' a ' + d1Dia + '/' + d1Mes;
 }
 
 function linhasSinteticas(inicio = new Date(2026, 9, 12)) {
@@ -17,7 +22,7 @@ function linhasSinteticas(inicio = new Date(2026, 9, 12)) {
   return [
     [0, null, null, null, null, null, null, null, null, null],
     ['data', 'equipe', 'roteiro', 'visitas', 'ordem', 'municipio', 'ponto', 'D', 'coordenada', 'obs'],
-    cab(d0, 'A', '12 e 13/10', 'Equipe A'),
+    cab(d0, 'A', periodoDeDoisDias(d0, d1), 'Equipe A'),
     [d0, 'A', 99, '-', 0, 'Cidade Alfa', 'Ponto de encontro', null, '-20.000,-44.000', 'Praça Alfa'],
     [d0, 'A', 99, 1, 2, 'Cidade Alfa', 'AA0002X', 1, '-20.002,-44.002', null],
     [d0, 'A', 99, 0, 1, 'Cidade Alfa', 'AA0001X', 0, '-20.001,-44.001', null],
@@ -37,7 +42,7 @@ function linhasSinteticas(inicio = new Date(2026, 9, 12)) {
     [d0, 'A', 99, 0, 1, 'Cidade Alfa', 'AA0001X', 0, '-20.001,-44.001', null],
     cab(futuro, 'C', '', 'Equipe C'),
     [futuro, 'C', 99, '-', 0, null, 'Ponto de encontro', null, null, null],
-    [futuro, 'C', 99, 3, 1, 'Cidade C', 'CESGOT', 0, '-20.030,-44.030', null],
+    [futuro, 'C', 99, 4, 1, 'Cidade C', 'CESGOT', 0, '-20.030,-44.030', null],
   ];
 }
 
