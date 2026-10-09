@@ -53,8 +53,12 @@ async function main() {
     await subir();
     log('4  servidor de volta; sincroniza:', await avaliar(`document.querySelector('.sinc').click(); await new Promise(r=>setTimeout(r,3000)); return document.querySelector('.sinc').textContent + ' || ' + document.querySelector('.rodape').textContent`));
 
-    fs.writeFileSync('app/sw.js', arquivosOriginais.sw.replace("roteiro-v1.0.0", 'roteiro-v1.0.1'));
-    fs.writeFileSync('app/config.js', arquivosOriginais.cfg.replace("VERSAO: '1.0.0'", "VERSAO: '1.0.1'"));
+    // Simula uma versão nova: aumenta o último número da versão atual (ex.: 1.1.0 → 1.1.1) nos dois arquivos.
+    const atual = /VERSAO: '(\d+)\.(\d+)\.(\d+)'/.exec(arquivosOriginais.cfg);
+    const versaoAtual = atual.slice(1, 4).join('.');
+    const versaoNova = `${atual[1]}.${atual[2]}.${Number(atual[3]) + 1}`;
+    fs.writeFileSync('app/sw.js', arquivosOriginais.sw.replace(`roteiro-v${versaoAtual}`, `roteiro-v${versaoNova}`));
+    fs.writeFileSync('app/config.js', arquivosOriginais.cfg.replace(`VERSAO: '${versaoAtual}'`, `VERSAO: '${versaoNova}'`));
     await ir(); await espera(3000); await ir();
     log('5  aviso de nova versão:', await avaliar(`return document.querySelector('[data-acao="atualizar-app"]')?.textContent || 'SEM AVISO'`));
     await avaliar(`document.querySelector('[data-acao="atualizar-app"]')?.click(); return 1`);

@@ -29,12 +29,13 @@ Passo a passo para colocar o sistema no ar pela primeira vez. Tempo estimado: 30
 ## 3. Primeiro roteiro e usuários
 
 1. Siga [operacao-diaria.md](operacao-diaria.md), seção "Atualizar o roteiro", para colar a aba `roteiros`.
-2. Cadastre os usuários na aba `Usuarios` (seção "Usuários" do mesmo documento).
+2. Cadastre os usuários na aba `Usuarios` (seção "Usuários" do mesmo documento): cada entrevistador com a **equipe** (`A`, `B` ou `C`) na coluna de equipe.
 
 ## 4. Publicar o app (GitHub Pages)
 
 1. Em `app/config.js`, troque `COLE_AQUI_A_URL_DO_APPS_SCRIPT` pela URL `/exec` do passo 2.
-2. Aumente `VERSAO` (config.js) e `VERSAO_CACHE` (sw.js) se o app já tiver sido publicado antes.
+2. Aumente `VERSAO` (config.js) e `VERSAO_CACHE` (sw.js) **juntos** se o app já tiver sido publicado antes (os testes exigem que as duas sejam iguais; versão atual: `1.1.0`).
+   - A logomarca fica em `app/img/innovare-logo.png` e está na lista de arquivos do cache offline em `app/sw.js`; se trocar ou renomear a imagem, atualize essa lista e aumente a versão.
 3. Rode `npm test`, faça commit e `git push`.
 4. Primeira vez: no GitHub, **Settings ▸ Pages ▸ Build and deployment ▸ Source: GitHub Actions**.
 5. Acompanhe em **Actions**; ao terminar, o endereço do app aparece no job `publicar` (ex.: `https://<usuario>.github.io/roteiro-qagro/`).
