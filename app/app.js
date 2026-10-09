@@ -87,6 +87,11 @@ function desenhar() {
   var foco = capturarFoco();
   var datas = datasDisponiveis();
   if (!Estado.dia || datas.indexOf(Estado.dia) < 0) Estado.dia = diaInicial(datas, hojeIso());
+  if (Estado.filtroEquipe) {
+    var equipesDoDia = unicos((Estado.roteiro ? blocosDoDia(Estado.roteiro.blocos, Estado.dia) : [])
+      .map(function (b) { return b.equipe; }));
+    if (equipesDoDia.indexOf(Estado.filtroEquipe) < 0) Estado.filtroEquipe = '';
+  }
   var sit = mesclado();
   raiz.innerHTML = htmlMarca() + htmlTopo() + htmlAlertas() + htmlDias(datas) +
     (supervisao() ? htmlFiltros() + htmlResumoEquipes(sit) : '') + htmlConteudo(sit);
@@ -113,7 +118,8 @@ function htmlTopo() {
 }
 
 function htmlMarca() {
-  return '<div class="marca"><img class="marca-logo" src="img/innovare-logo.png" alt="Innovare Pesquisa — opinião + mercado">' +
+  return '<div class="marca">' +
+    '<img class="marca-logo" src="img/innovare-logo.png" alt="Innovare Pesquisa — opinião + mercado">' +
     '<span class="marca-proj">QAgro · COPPETEC</span></div>';
 }
 
@@ -145,7 +151,7 @@ function htmlDias(datas) {
   if (!datas.length) return '<p class="vazio">Nenhum roteiro publicado ainda. Sincronize quando houver sinal.</p>';
   var hoje = hojeIso();
   return '<nav class="dias">' + datas.map(function (d) {
-    return '<button class="dia' + (d === Estado.dia ? ' ativo' : '') + '" data-acao="dia" data-dia="' + d + '">' +
+    return '<button class="dia' + (d === Estado.dia ? ' ativo' : '') + '" data-acao="dia" data-dia="' + esc(d) + '">' +
       (d === hoje ? 'Hoje · ' : '') + rotuloDia(d) + '</button>';
   }).join('') + '</nav>';
 }
