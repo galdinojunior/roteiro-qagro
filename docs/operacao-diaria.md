@@ -51,6 +51,8 @@ Aba `Usuarios`, uma linha por pessoa:
 | `sync_intervalo_min` | intervalo da sincronização automática com o app aberto |
 | `tentativas_max` | visitas a partir das quais o ponto está esgotado e some do app (padrão `3`); também define qual é a "última tentativa" no cartão |
 
+> A aba `Config` já existente não tem a linha `tentativas_max`. Para mudar o limite, acrescente uma linha `tentativas_max` com o número; sem ela o valor é 3.
+
 > Se remover um status que já foi usado, marcações antigas continuam na planilha, mas aparelhos com marcações pendentes daquele status terão essas marcações **recusadas** (o aviso aparece só no telefone, no topo). Também não mude a equipe de uma pessoa enquanto o telefone dela tiver marcações pendentes — avise a pessoa antes de ela tocar em "ok".
 
 ## Problemas comuns
@@ -74,7 +76,7 @@ Passos do coordenador para passar da versão 1.0.0 (duplas) para a 1.1.0 (equipe
 4. Em `Usuarios`, coloque `A`, `B` ou `C` na coluna da equipe de cada entrevistador (`A1` ainda funciona e vale `A`).
 5. Cole de novo a aba `roteiros` do Planejador e rode **Roteiros ▸ Verificar aba roteiros**.
 6. Apague as linhas de teste de `Registros` e `Situacao` que têm chaves com `A1` (`…|A1|…`): ficam sem efeito na versão nova.
-7. Os celulares mostram "Nova versão disponível — toque para atualizar". Até o passo 2 ser feito, um celular já atualizado não sincroniza com o servidor antigo (mostra erro de sincronização, sem perder marcações).
+7. Os celulares mostram "Nova versão disponível — toque para atualizar". **Ordem:** atualize o Apps Script (passos 1 e 2) **antes** de publicar o app (o `git push` na `main`), ou junto com ele. Na pequena folga, um celular já na 1.1.0 falando com o servidor antigo mostra "Nenhum roteiro publicado ainda" (sem erro e sem perda de dados); um celular de supervisor ainda na 1.0.0 com o servidor novo pode não conseguir desenhar a tela até atualizar ("Nova versão disponível").
 
 ## Publicar uma nova versão do app
 

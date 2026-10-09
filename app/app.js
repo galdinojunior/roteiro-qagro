@@ -174,7 +174,7 @@ function htmlResumoEquipes(sit) {
   var lista = Estado.config.status;
   var linhas = blocos.map(function (b) {
     var r = resumoStatus(b.pontos, sit, lista);
-    return '<tr><td>' + esc(b.equipe) + '</td><td>' + r.total + '</td>' +
+    return '<tr><td>' + esc(b.equipe) + (b.periodo ? ' · ' + esc(b.periodo) : '') + '</td><td>' + r.total + '</td>' +
       lista.map(function (s) { return '<td>' + r.porStatus[s] + '</td>'; }).join('') + '<td>' + r.pendentes + '</td></tr>';
   });
   return '<div class="resumo-equipes"><table><thead><tr><th>Equipe</th><th>Pontos</th>' +
@@ -234,7 +234,7 @@ function htmlPonto(p, s) {
     rodape = '<div class="rodape"><span class="pend">observação não enviada</span></div>';
   }
   var ordem = p.ordem === null ? '–' : String(p.ordem).padStart(2, '0');
-  var tentativa = rotuloTentativa(p.visitas, Estado.config.tentativas_max);
+  var tentativa = rotuloTentativa(p.visitas, Estado.config.tentativas_max || 3);
   var classeTentativa = tentativa.indexOf('última') >= 0 ? ' ultima' : '';
   return '<div class="card' + (indice === 0 ? ' st-ok' : (indice > 0 ? ' st-outro' : '')) + '">' +
     '<div class="l1"><span class="ord">' + ordem + '</span><span class="cod">' + esc(p.codigo) + '</span>' +

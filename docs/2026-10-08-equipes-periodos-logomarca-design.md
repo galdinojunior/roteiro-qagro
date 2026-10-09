@@ -117,7 +117,7 @@ lerRoteiros(linhas, { tentativasMax: 3 }) → {
 ## 6. Compatibilidade e migração
 
 - Versão `1.1.0` (`CONFIG.VERSAO` e `VERSAO_CACHE` iguais). Os celulares recebem o aviso "Nova versão disponível".
-- **Passo do coordenador:** colar os `.gs` atualizados no Apps Script e **Implantar ▸ Gerenciar implantações ▸ Nova versão** (mesma implantação, mesma URL). Antes disso, os celulares já atualizados e o servidor antigo não combinam; o app mostra erro de sincronização, sem perder marcações.
+- **Passo do coordenador:** colar os `.gs` atualizados no Apps Script e **Implantar ▸ Gerenciar implantações ▸ Nova versão** (mesma implantação, mesma URL). **Ordem:** atualizar o Apps Script **antes** de publicar o app (push na `main`), ou junto com ele. Na folga, um celular já na 1.1.0 com o servidor antigo mostra "Nenhum roteiro publicado ainda" (sem erro nem perda de dados); um celular de supervisor ainda na 1.0.0 com o servidor novo pode não desenhar a tela até atualizar ("Nova versão disponível").
 - Marcações de teste com chaves antigas (`…|A1|…`) deixam de aparecer. O coordenador pode apagar as linhas de teste de `Registros` e `Situacao`.
 - Marcações pendentes na fila de um celular com a chave antiga (`…|A1|…`) serão **recusadas** pelo servidor novo (`ponto_fora_da_dupla`). Como o app ainda não foi distribuído às equipes, o risco é só dos testes.
 

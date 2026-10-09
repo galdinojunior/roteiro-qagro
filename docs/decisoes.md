@@ -113,7 +113,7 @@ Cada decisão importante do projeto, com contexto e motivo. Novas decisões são
 **Contexto:** na operação real cada equipe (A, B, C) tem 2 carros com 2 entrevistadores cada; os carros saem e chegam juntos nos mesmos pontos de encontro e de término e seguem pelos dois lados da estrada.
 **Decisão:** as duplas A1 e A2 viram uma só equipe, **A** (idem B e C). Os 4 entrevistadores veem o mesmo roteiro; o entrevistador vê os blocos da sua equipe e grava só em chaves da sua equipe. A chave do ponto passa a ser `data|equipe|codigo` (ex.: `2026-10-12|A|AA0001X`). Em `Usuarios`, `Registros` e `Situacao` a coluna `dupla` passa a guardar a **equipe**; valor antigo como `A1` vale `A`.
 **Motivo:** a equipe decide no campo quem visita cada ponto, então não há coluna de carro. O cartão mostra o nome de quem marcou e, se dois carros marcam o mesmo ponto sem sinal, vale a marcação mais recente (regra da D9), sem perder nada.
-**Consequência:** marcações de teste com chaves antigas (`…|A1|…`) deixam de aparecer; pendentes com chave antiga são recusadas pelo servidor novo (motivo `ponto_fora_da_dupla`, nome mantido por compatibilidade).
+**Consequência:** marcações de teste com chaves antigas (`…|A1|…`) deixam de aparecer; pendentes com chave antiga são recusadas pelo servidor novo (motivo `ponto_fora_da_dupla`, nome mantido por compatibilidade). **Ordem de publicação:** atualizar o Apps Script antes de publicar o app (ou junto); na folga, celular na 1.1.0 com servidor antigo mostra "Nenhum roteiro publicado ainda" (sem erro nem perda), e supervisor ainda na 1.0.0 com servidor novo pode não desenhar a tela até atualizar.
 
 ## D17 — Roteiros de vários dias e tentativas por ponto
 **Data:** 08/10/2026 · **Status:** aceita

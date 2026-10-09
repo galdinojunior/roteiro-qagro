@@ -105,7 +105,7 @@ function rotuloTentativa(visitas, max) {
 function diasDosBlocos(blocos) {
   var dias = [];
   (blocos || []).forEach(function (bloco) {
-    (bloco.dias || []).forEach(function (dia) {
+    (bloco.dias || [bloco.data]).forEach(function (dia) {
       if (dias.indexOf(dia) < 0) dias.push(dia);
     });
   });
@@ -113,7 +113,7 @@ function diasDosBlocos(blocos) {
 }
 
 function blocosDoDia(blocos, dia) {
-  return (blocos || []).filter(function (bloco) { return (bloco.dias || []).indexOf(dia) >= 0; });
+  return (blocos || []).filter(function (bloco) { return (bloco.dias || [bloco.data]).indexOf(dia) >= 0; });
 }
 
 function escaparHtml(texto) {

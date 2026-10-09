@@ -23,7 +23,7 @@
 - Escreva a observação quando não for "Feito" (ex.: "agendou retorno às 15h").
 - Errou? Toque no status certo — vale a última marcação.
 - No cartão aparece o **nome de quem marcou**. Se alguém da equipe já marcou o ponto, você vê na hora que sincronizar.
-- A etiqueta **2ª tentativa** ou **3ª e última tentativa** avisa que o ponto já foi visitado antes. Depois da última tentativa o ponto sai da lista.
+- A etiqueta **2ª tentativa** ou **3ª e última tentativa** avisa que o ponto já foi visitado antes. Quando o coordenador atualiza o Planejador e as visitas chegam ao limite, o ponto sai da lista.
 
 **5. Envio**
 - O envio é automático quando houver sinal. No topo: **laranja** = há marcações guardadas esperando sinal; **verde** = tudo enviado.

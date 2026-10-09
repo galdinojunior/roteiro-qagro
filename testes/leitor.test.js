@@ -71,6 +71,11 @@ test('períodos seguem literalmente a tabela da especificação', () => {
     assert.equal(r.periodo, texto);
     assert.ok(r.aviso.includes('Linha 7: período "' + texto + '" não reconhecido; usando só a data do bloco.'));
   }
+  assert.equal(g.lerPeriodo('01/10 a 31/10', data, 7).dias.length, 31);
+  assert.equal(g.lerPeriodo('01/10 a 31/10', data, 7).aviso, null);
+  const longo = simples(g.lerPeriodo('01/10 a 01/11', data, 7));
+  assert.deepEqual(longo.dias, [data]);
+  assert.ok(longo.aviso.includes('não reconhecido'));
   assert.deepEqual(simples(g.lerPeriodo('01/10 a 15/11', data, 7)), {
     dias: [data], periodo: '01/10 a 15/11',
     aviso: 'Linha 7: período "01/10 a 15/11" não reconhecido; usando só a data do bloco.',

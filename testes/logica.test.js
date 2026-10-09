@@ -108,6 +108,13 @@ test('diasDosBlocos e blocosDoDia usam os dias do período', () => {
   assert.deepEqual(simples(l.blocosDoDia(blocos, '2026-10-15')), []);
 });
 
+test('bloco sem dias (servidor antigo) vale só a data do bloco', () => {
+  const blocos = [{ equipe: 'A', data: '2026-10-12' }];
+  assert.deepEqual(simples(l.diasDosBlocos(blocos)), ['2026-10-12']);
+  assert.deepEqual(simples(l.blocosDoDia(blocos, '2026-10-12')), blocos);
+  assert.deepEqual(simples(l.blocosDoDia(blocos, '2026-10-13')), []);
+});
+
 test('escaparHtml', () => {
   assert.equal(l.escaparHtml('<a href="x">&\''), '&lt;a href=&quot;x&quot;&gt;&amp;&#39;');
   assert.equal(l.escaparHtml(null), '');

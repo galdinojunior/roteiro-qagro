@@ -125,9 +125,9 @@ A leitura percorre as linhas em ordem e reconhece:
 
 Dentro do bloco de cada equipe, **após o último ponto**, incluir uma linha no mesmo formato da linha de encontro:
 
-| data | equipe | visitas | ordem | municipio | ponto | D | coordenada | obs |
-|---|---|---|---|---|---|---|---|---|
-| 14/10/2026 | A | - | 21 | Cidade Um | **Ponto de término** | | -20.000000, -44.000000 | Praça Um - Centro |
+| data | equipe | roteiro | visitas | ordem | municipio | ponto | D | coordenada | obs |
+|---|---|---|---|---|---|---|---|---|---|
+| 14/10/2026 | A | 1 | - | 21 | Cidade Um | **Ponto de término** | | -20.000000, -44.000000 | Praça Um - Centro |
 
 #### Identificação de um ponto
 

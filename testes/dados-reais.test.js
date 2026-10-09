@@ -10,6 +10,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { carregar, simples } = require('./carregar');
 
+// Deve ser igual ao padrão de tentativas_max na Config (3).
+const TENTATIVAS_MAX = 3;
 const ARQUIVO = path.join(__dirname, 'fixtures', 'privado', 'roteiros_real.json');
 const existe = fs.existsSync(ARQUIVO);
 
@@ -35,7 +37,7 @@ test('dados reais do Planejador: blocos bem formados', { skip: !existe && 'rode 
   for (const b of blocos) {
     const ordens = b.pontos.map((p) => p.ordem).filter((o) => o !== null);
     assert.deepEqual(ordens, [...ordens].sort((x, y) => x - y), `pontos fora de ordem em ${b.data} ${b.equipe}`);
-    assert.ok(b.pontos.every((p) => p.chave === `${b.data}|${b.equipe}|${p.codigo}` && p.visitas < 3));
+    assert.ok(b.pontos.every((p) => p.chave === `${b.data}|${b.equipe}|${p.codigo}` && p.visitas < TENTATIVAS_MAX));
   }
   assert.deepEqual(avisos.filter((a) => a.includes('coordenada')), []);
 });

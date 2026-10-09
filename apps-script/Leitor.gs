@@ -96,11 +96,12 @@ function lerPeriodo(valor, dataBloco, nLinha) {
       if (/^\s*(a|ate|até|-|–)\s*$/i.test(entre)) {
         var cursor = dias[k];
         var quantidade = 0;
-        while (cursor !== dias[k + 1] && quantidade++ < 31) {
+        while (cursor !== dias[k + 1] && quantidade < 31) {
+          quantidade++;
           cursor = _somarDiasLeitor(cursor, 1);
           resultado.push(cursor);
         }
-        if (cursor !== dias[k + 1] || quantidade >= 31) return fallback();
+        if (cursor !== dias[k + 1] || quantidade > 30) return fallback(); // no máximo 31 dias, contando os dois extremos
       }
     }
   }
