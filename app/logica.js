@@ -96,6 +96,26 @@ function rotuloDia(iso) {
   return DIAS_SEMANA[d.getUTCDay()] + ' ' + _dois(p[2]) + '/' + _dois(p[1]);
 }
 
+function rotuloTentativa(visitas, max) {
+  if (typeof visitas !== 'number' || !isFinite(visitas) || visitas <= 0) return '';
+  var numero = visitas + 1;
+  return numero + 'ª' + (numero === max ? ' e última tentativa' : ' tentativa');
+}
+
+function diasDosBlocos(blocos) {
+  var dias = [];
+  (blocos || []).forEach(function (bloco) {
+    (bloco.dias || []).forEach(function (dia) {
+      if (dias.indexOf(dia) < 0) dias.push(dia);
+    });
+  });
+  return dias.sort();
+}
+
+function blocosDoDia(blocos, dia) {
+  return (blocos || []).filter(function (bloco) { return (bloco.dias || []).indexOf(dia) >= 0; });
+}
+
 function escaparHtml(texto) {
   if (texto === null || texto === undefined) return '';
   return String(texto).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')

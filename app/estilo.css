@@ -35,10 +35,10 @@ button{font-family:inherit;font-size:inherit;cursor:pointer}
 .filtro{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:10px 0}
 .fr{font-size:11px;color:var(--cla);text-transform:uppercase;letter-spacing:.08em;font-weight:700;min-width:48px}
 .fb{padding:7px 12px;border:1px solid var(--fio);background:#fff;border-radius:3px;font-size:14px;min-height:44px;color:var(--med)}
-.resumo-duplas{overflow-x:auto;margin:10px 0}
-.resumo-duplas table{border-collapse:collapse;font-size:13px;width:100%}
-.resumo-duplas th,.resumo-duplas td{border-bottom:1px solid var(--fio);padding:6px 8px;text-align:right;white-space:nowrap}
-.resumo-duplas th:first-child,.resumo-duplas td:first-child{text-align:left;font-weight:700;color:var(--esc)}
+.resumo-equipes{overflow-x:auto;margin:10px 0}
+.resumo-equipes table{border-collapse:collapse;font-size:13px;width:100%}
+.resumo-equipes th,.resumo-equipes td{border-bottom:1px solid var(--fio);padding:6px 8px;text-align:right;white-space:nowrap}
+.resumo-equipes th:first-child,.resumo-equipes td:first-child{text-align:left;font-weight:700;color:var(--esc)}
 
 .bloco{margin:18px 0 30px}
 .bloco h1{font-size:19px;color:var(--esc);margin:0 0 2px}
@@ -56,6 +56,8 @@ button{font-family:inherit;font-size:inherit;cursor:pointer}
 .cod{font-weight:700;color:var(--esc);font-size:17px;letter-spacing:.02em}
 .mun{font-size:14px}
 .tag{font-size:11px;color:var(--cor);border:1px solid var(--cor);border-radius:3px;padding:1px 6px;text-transform:uppercase;letter-spacing:.04em}
+.tag-tent{color:var(--cla);border-color:var(--cla)}
+.tag-tent.ultima{color:var(--cor);border-color:var(--cor);font-weight:700}
 .obsplan{font-size:14px;margin-top:4px;font-style:italic}
 .coordrow{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
 .coord{font-family:Consolas,monospace;font-size:14px;background:#F6F6F6;padding:6px 8px;border-radius:3px;-webkit-user-select:all;user-select:all}
@@ -72,7 +74,11 @@ button{font-family:inherit;font-size:inherit;cursor:pointer}
 .rodape.alerta-gps{color:#8A4B00}
 .pend{color:var(--cor);font-weight:700}
 
+.marca{display:flex;justify-content:space-between;align-items:center;padding:10px 0 6px}
+.marca-logo{height:30px;width:auto}
+.marca-proj{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--cla);text-align:right}
 .entrada{padding:40px 4px}
+.entrada-logo{display:block;width:min(260px,80%);height:auto;margin:0 0 20px}
 .etq{color:var(--cor);font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
 .entrada h1{color:var(--esc);font-size:24px;margin:4px 0 12px}
 .entrada form{display:flex;gap:8px;margin:18px 0}

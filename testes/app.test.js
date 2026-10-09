@@ -28,6 +28,15 @@ test('todo script e estilo do index.html está no cache offline', () => {
   for (const u of usados) assert.ok(cache.includes(u), `${u} não está em ARQUIVOS (sw.js)`);
 });
 
+test('toda imagem usada em app.js está no cache offline e existe', () => {
+  const imagens = [...ler('app.js').matchAll(/src="(img\/[^"]+)"/g)].map((m) => m[1]);
+  const cache = arquivosSw();
+  for (const imagem of imagens) {
+    assert.ok(cache.includes(imagem), `${imagem} não está em ARQUIVOS (sw.js)`);
+    assert.ok(fs.existsSync(path.join(APP, imagem)), `faltando app/${imagem}`);
+  }
+});
+
 test('manifesto válido com ícones PNG existentes', () => {
   const m = JSON.parse(ler('manifest.webmanifest'));
   assert.equal(m.display, 'standalone');

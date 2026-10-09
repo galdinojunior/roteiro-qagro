@@ -4,7 +4,7 @@
  */
 var Estado = {
   usuario: null, config: null, roteiro: null, situacao: [], fila: [], avisos: [], rejeitados: [],
-  ultimaSinc: null, desvio: 0, dia: null, filtroGrupo: '', filtroDupla: '',
+  ultimaSinc: null, desvio: 0, dia: null, filtroEquipe: '',
   sincronizando: false, erroSync: null, capturando: {}, swEsperando: null
 };
 var raiz = document.getElementById('app');
@@ -12,7 +12,7 @@ var temporizadoresObs = {};
 var eventosProntos = false;
 
 var MOTIVOS_REJEICAO = {
-  ponto_fora_da_dupla: 'ponto de outra dupla',
+  ponto_fora_da_dupla: 'ponto de outra equipe',
   status_invalido: 'status que não existe mais',
   data_invalida: 'data inválida',
   tipo_invalido: 'tipo inválido',
@@ -60,17 +60,13 @@ function mesclado() {
 }
 
 function datasDisponiveis() {
-  return Estado.roteiro ? unicos(Estado.roteiro.blocos.map(function (b) { return b.data; })) : [];
-}
-
-function blocosDoDia() {
-  if (!Estado.roteiro) return [];
-  return Estado.roteiro.blocos.filter(function (b) { return b.data === Estado.dia; });
+  return Estado.roteiro ? diasDosBlocos(Estado.roteiro.blocos) : [];
 }
 
 function blocosVisiveis() {
-  return blocosDoDia().filter(function (b) {
-    return (!Estado.filtroGrupo || b.grupo === Estado.filtroGrupo) && (!Estado.filtroDupla || b.dupla === Estado.filtroDupla);
+  var blocos = Estado.roteiro ? blocosDoDia(Estado.roteiro.blocos, Estado.dia) : [];
+  return blocos.filter(function (b) {
+    return !Estado.filtroEquipe || b.equipe === Estado.filtroEquipe;
   });
 }
 
@@ -92,8 +88,8 @@ function desenhar() {
   var datas = datasDisponiveis();
   if (!Estado.dia || datas.indexOf(Estado.dia) < 0) Estado.dia = diaInicial(datas, hojeIso());
   var sit = mesclado();
-  raiz.innerHTML = htmlTopo() + htmlAlertas() + htmlDias(datas) +
-    (supervisao() ? htmlFiltros() + htmlResumoDuplas(sit) : '') + htmlConteudo(sit);
+  raiz.innerHTML = htmlMarca() + htmlTopo() + htmlAlertas() + htmlDias(datas) +
+    (supervisao() ? htmlFiltros() + htmlResumoEquipes(sit) : '') + htmlConteudo(sit);
   restaurarFoco(foco);
 }
 
@@ -109,11 +105,16 @@ function htmlTopo() {
   var texto = Estado.sincronizando ? 'Sincronizando…'
     : (n ? n + (n === 1 ? ' pendente' : ' pendentes') : 'tudo enviado') + ' · últ. sinc. ' + quando;
   return '<header class="topo">' +
-    '<div class="quem"><b>' + esc(u.nome) + '</b> · ' + (u.dupla ? 'Dupla ' + esc(u.dupla) : esc(u.papel)) + '</div>' +
+    '<div class="quem"><b>' + esc(u.nome) + '</b> · ' + (u.equipe ? 'Equipe ' + esc(u.equipe) : esc(u.papel)) + '</div>' +
     '<button class="sinc sinc-' + cor + '" data-acao="sincronizar"><span class="bola">●</span> ' + esc(texto) + '</button>' +
     '<details class="menu"><summary aria-label="Menu">⋮</summary><div class="menu-corpo">' +
     '<button data-acao="sair">Sair deste aparelho</button><p>Versão ' + esc(CONFIG.VERSAO) + '</p></div></details>' +
     '</header>';
+}
+
+function htmlMarca() {
+  return '<div class="marca"><img class="marca-logo" src="img/innovare-logo.png" alt="Innovare Pesquisa — opinião + mercado">' +
+    '<span class="marca-proj">QAgro · COPPETEC</span></div>';
 }
 
 function htmlAlertas() {
@@ -150,28 +151,27 @@ function htmlDias(datas) {
 }
 
 function htmlFiltros() {
-  var duplas = unicos(blocosDoDia().map(function (b) { return b.dupla; }));
-  var grupos = unicos(duplas.map(function (d) { return d.charAt(0); }));
+  var blocos = Estado.roteiro ? blocosDoDia(Estado.roteiro.blocos, Estado.dia) : [];
+  var equipes = unicos(blocos.map(function (b) { return b.equipe; }));
   var botao = function (acao, valor, rotulo, ativo) {
     return '<button class="fb' + (ativo ? ' ativo' : '') + '" data-acao="' + acao + '" data-valor="' + esc(valor) + '">' + esc(rotulo) + '</button>';
   };
-  return '<div class="filtro"><span class="fr">Grupo</span>' + botao('grupo', '', 'Todos', !Estado.filtroGrupo) +
-    grupos.map(function (g) { return botao('grupo', g, g, Estado.filtroGrupo === g); }).join('') + '</div>' +
-    '<div class="filtro"><span class="fr">Dupla</span>' + botao('dupla', '', 'Todas', !Estado.filtroDupla) +
-    duplas.filter(function (d) { return !Estado.filtroGrupo || d.charAt(0) === Estado.filtroGrupo; })
-      .map(function (d) { return botao('dupla', d, d, Estado.filtroDupla === d); }).join('') + '</div>';
+  return '<div class="filtro"><span class="fr">Equipe</span>' + botao('equipe', '', 'Todas', !Estado.filtroEquipe) +
+    equipes.map(function (equipe) {
+      return botao('equipe', equipe, equipe, Estado.filtroEquipe === equipe);
+    }).join('') + '</div>';
 }
 
-function htmlResumoDuplas(sit) {
+function htmlResumoEquipes(sit) {
   var blocos = blocosVisiveis();
   if (!blocos.length) return '';
   var lista = Estado.config.status;
   var linhas = blocos.map(function (b) {
     var r = resumoStatus(b.pontos, sit, lista);
-    return '<tr><td>' + esc(b.dupla) + '</td><td>' + r.total + '</td>' +
+    return '<tr><td>' + esc(b.equipe) + '</td><td>' + r.total + '</td>' +
       lista.map(function (s) { return '<td>' + r.porStatus[s] + '</td>'; }).join('') + '<td>' + r.pendentes + '</td></tr>';
   });
-  return '<div class="resumo-duplas"><table><thead><tr><th>Dupla</th><th>Pontos</th>' +
+  return '<div class="resumo-equipes"><table><thead><tr><th>Equipe</th><th>Pontos</th>' +
     lista.map(function (s) { return '<th>' + esc(s) + '</th>'; }).join('') + '<th>Pendentes</th></tr></thead><tbody>' +
     linhas.join('') + '</tbody></table></div>';
 }
@@ -188,7 +188,7 @@ function htmlBloco(b, sit) {
   var resumo = Estado.config.status.filter(function (s) { return r.porStatus[s]; })
     .map(function (s) { return r.porStatus[s] + ' ' + s; })
     .concat(r.pendentes ? [r.pendentes + (r.pendentes === 1 ? ' pendente' : ' pendentes')] : []).join(' · ');
-  return '<section class="bloco"><h1>Dupla ' + esc(b.dupla) + ' · ' + rotuloDia(b.data) + '</h1>' +
+  return '<section class="bloco"><h1>Equipe ' + esc(b.equipe) + ' · ' + esc(b.periodo || rotuloDia(Estado.dia)) + '</h1>' +
     '<div class="sub">' + b.pontos.length + ' pontos · ' + esc(resumo) + '</div>' +
     htmlLugar('Encontro', b.encontro) +
     b.pontos.map(function (p) { return htmlPonto(p, sit[p.chave]); }).join('') +
@@ -228,9 +228,12 @@ function htmlPonto(p, s) {
     rodape = '<div class="rodape"><span class="pend">observação não enviada</span></div>';
   }
   var ordem = p.ordem === null ? '–' : String(p.ordem).padStart(2, '0');
+  var tentativa = rotuloTentativa(p.visitas, Estado.config.tentativas_max);
+  var classeTentativa = tentativa.indexOf('última') >= 0 ? ' ultima' : '';
   return '<div class="card' + (indice === 0 ? ' st-ok' : (indice > 0 ? ' st-outro' : '')) + '">' +
     '<div class="l1"><span class="ord">' + ordem + '</span><span class="cod">' + esc(p.codigo) + '</span>' +
-    '<span class="mun">' + esc(p.municipio || '') + '</span>' + (p.dup ? '<span class="tag">possível duplicidade</span>' : '') + '</div>' +
+    '<span class="mun">' + esc(p.municipio || '') + '</span>' + (p.dup ? '<span class="tag">possível duplicidade</span>' : '') +
+    (tentativa ? '<span class="tag tag-tent' + classeTentativa + '">' + esc(tentativa) + '</span>' : '') + '</div>' +
     (p.obs ? '<div class="obsplan">' + esc(p.obs) + '</div>' : '') + htmlCoord(p.lat, p.lon) +
     '<div class="status">' + lista.map(function (nome) {
       return '<button class="stb' + (ativo === nome ? ' ativo' : '') + '" data-acao="marcar" data-chave="' + esc(p.chave) +
@@ -360,8 +363,7 @@ async function aoClicar(e) {
   var acao = el.dataset.acao;
   if (acao === 'sincronizar') Sync.sincronizar('manual');
   else if (acao === 'dia') { Estado.dia = el.dataset.dia; desenhar(); window.scrollTo(0, 0); }
-  else if (acao === 'grupo') { Estado.filtroGrupo = el.dataset.valor; Estado.filtroDupla = ''; desenhar(); }
-  else if (acao === 'dupla') { Estado.filtroDupla = el.dataset.valor; desenhar(); }
+  else if (acao === 'equipe') { Estado.filtroEquipe = el.dataset.valor; desenhar(); }
   else if (acao === 'marcar') marcar(el.dataset.chave, el.dataset.status);
   else if (acao === 'copiar') copiar(el, el.dataset.texto);
   else if (acao === 'limpar-rejeitados') { await Banco.gravar('rejeitados', []); Estado.rejeitados = []; desenhar(); }
@@ -396,7 +398,9 @@ function prepararEventos() {
 // ---------- Entrada e início ----------
 
 function telaEntrada(mensagem) {
-  raiz.innerHTML = '<div class="entrada"><div class="etq">QAgro · COPPETEC</div><h1>Roteiros de campo</h1>' +
+  raiz.innerHTML = '<div class="entrada">' +
+    '<img class="entrada-logo" src="img/innovare-logo.png" alt="Innovare Pesquisa — opinião + mercado">' +
+    '<div class="etq">QAgro · COPPETEC</div><h1>Roteiros de campo</h1>' +
     '<p>Digite o código de acesso que você recebeu do coordenador. É preciso ter internet só neste primeiro acesso.</p>' +
     '<form id="form-entrada"><input id="codigo" autocomplete="off" autocapitalize="characters" maxlength="12" placeholder="Código" required>' +
     '<button class="primario" type="submit">Entrar</button></form>' +

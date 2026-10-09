@@ -89,6 +89,25 @@ test('rotuloDia', () => {
   assert.equal(l.rotuloDia('2026-09-18'), 'Sex 18/09');
 });
 
+test('rotuloTentativa', () => {
+  assert.equal(l.rotuloTentativa(0, 3), '');
+  assert.equal(l.rotuloTentativa(1, 3), '2ª tentativa');
+  assert.equal(l.rotuloTentativa(2, 3), '3ª e última tentativa');
+  assert.equal(l.rotuloTentativa(1, 2), '2ª e última tentativa');
+  assert.equal(l.rotuloTentativa(undefined, 3), '');
+  assert.equal(l.rotuloTentativa('x', 3), '');
+});
+
+test('diasDosBlocos e blocosDoDia usam os dias do período', () => {
+  const blocos = [
+    { equipe: 'A', dias: ['2026-10-13', '2026-10-12'] },
+    { equipe: 'B', dias: ['2026-10-13', '2026-10-14'] },
+  ];
+  assert.deepEqual(simples(l.diasDosBlocos(blocos)), ['2026-10-12', '2026-10-13', '2026-10-14']);
+  assert.deepEqual(simples(l.blocosDoDia(blocos, '2026-10-13')), blocos);
+  assert.deepEqual(simples(l.blocosDoDia(blocos, '2026-10-15')), []);
+});
+
 test('escaparHtml', () => {
   assert.equal(l.escaparHtml('<a href="x">&\''), '&lt;a href=&quot;x&quot;&gt;&amp;&#39;');
   assert.equal(l.escaparHtml(null), '');

@@ -3,7 +3,7 @@
  * Chamadas ao Apps Script (outra origem) NUNCA passam pelo cache.
  * Ao publicar mudança em app/, aumente VERSAO_CACHE junto com VERSAO em config.js.
  */
-const VERSAO_CACHE = 'roteiro-v1.0.0';
+const VERSAO_CACHE = 'roteiro-v1.1.0';
 const ARQUIVOS = [
   "./",
   "index.html",
@@ -16,6 +16,7 @@ const ARQUIVOS = [
   "sincronizacao.js",
   "app.js",
   "manifest.webmanifest",
+  "img/innovare-logo.png",
   "icones/icone-192.png",
   "icones/icone-512.png"
 ];
